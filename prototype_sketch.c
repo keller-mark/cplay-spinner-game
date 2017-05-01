@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "serial_interface.h"
-#include "prototype_full.h"
+#include "prototype_sketch.h"
 
 enum mode{
   MODE_OFF,
