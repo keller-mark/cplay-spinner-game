@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include "neopixel_blit.h"
+#include "pitches.h"
+#include "tones.h"
 
 #define BIT5 (1<<5)
 #define BIT6 (1<<6)
@@ -25,7 +27,7 @@
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
 
-void cpyPixel( uint8_t dest[3], const uint8_t src[3]);
+void cpyPixel(uint8_t dest[3], uint8_t src[3]);
 void rotate(Pixels pixels, uint8_t color[3]);
 void setColor(uint8_t color[3]);
 void checkForModeSwitch();

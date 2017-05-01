@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "serial_interface.h"
-#include "prototype_sketch.h"
+#include "prototype_full.h"
 
 enum mode{
   MODE_OFF,
@@ -17,17 +17,20 @@ enum pressSpot{
   BOTTOM_RIGHT = 1
 };
 
+
 void setup() {DDRD = BIT5;
   DDRB &= ~(BIT5 | BIT6);
 
   init_serial_stdio();
   init_neopixel_blit();
+  init_speaker();
+
 }
 
-#define DISPLAY_TIME 500 
-const uint8_t white[3] = {1,1,1};
-const uint8_t green[3] = {2,0,0};
-const uint8_t red[3] = {0,2,0};
+#define DISPLAY_TIME 500
+uint8_t white[3] = {1,1,1};
+uint8_t green[3] = {2,0,0};
+uint8_t red[3] = {0,2,0};
 
 enum pressSpot getTouch(){
     /* if in capacitive mode, turn on neopixels with touch input */
@@ -36,7 +39,7 @@ enum pressSpot getTouch(){
     for(sensor_id = 0; sensor_id < 8; sensor_id++) {
       if(capsense(sensor_id)) {
 	return sensorToNeoPixel(sensor_id);
-      } 
+      }
     }
     return NONE;
 }
@@ -50,7 +53,14 @@ void flash(const uint8_t color[3]){
   }
   for (i = 0; i < 4; i++){
     neopixel_blit(pixels);
-    delay(200);
+    if(color == white) {
+      speaker_tone(NOTE_A4, 40);
+    } else if(color == red) {
+      speaker_tone(NOTE_A5/pow(2, i), 40);
+    } else {
+      speaker_tone(NOTE_A3*pow(2, i), 40);
+    }
+    delay(160);
     neopixel_blit(off);
     delay(200);
   }
@@ -58,7 +68,7 @@ void flash(const uint8_t color[3]){
 
 enum mode mode_on(){
   Pixels pixels = { { 0 } };
-  flash(green);
+  flash(white);
   printf("mode on\n");
   int lastBlit = millis();
   int turnedOn = 0;
@@ -66,9 +76,9 @@ enum mode mode_on(){
     int location;
     int time = millis();
     if (time - lastBlit >= DISPLAY_TIME){
-        lastBlit = time;
-	rotate(pixels, white);
-	neopixel_blit(pixels);
+      lastBlit = time;
+      rotate(pixels, white);
+      neopixel_blit(pixels);
     }
     location = getTouch();
     if (location != -1){
@@ -112,7 +122,7 @@ void loop() {
   }
 }
 
-void cpyPixel( uint8_t dest[3], const uint8_t src[3]){
+void cpyPixel(uint8_t dest[3], uint8_t src[3]){
   dest[0] = src[0];
   dest[1] = src[1];
   dest[2] = src[2];
@@ -138,7 +148,7 @@ int buttonPressed() {
 
 unsigned long sensorIds[] = {0,0,0,0,0,0,0,0,0};
 
-int capsense(int sensorId) {  
+int capsense(int sensorId) {
     /* adapted from both the cap.c worksheet and CPlay_CapacitiveSensor */
 
     /* a counter for how many iterations until the cap discharges */
@@ -149,7 +159,7 @@ int capsense(int sensorId) {
     volatile IO_REG_TYPE *sReg;
     IO_REG_TYPE rBit;    /* receive pin's ports and bitmask */
     volatile IO_REG_TYPE *rReg;
-    
+
     pinMode(CPLAY_CAPSENSE_SHARED, OUTPUT);
     pinMode(receivePin, INPUT);
     digitalWrite(CPLAY_CAPSENSE_SHARED, LOW);
@@ -170,7 +180,7 @@ int capsense(int sensorId) {
     DIRECT_WRITE_HIGH(sReg, sBit);  /* sendPin High */
     interrupts();
 
-    while ( !DIRECT_READ(rReg, rBit) && cnt < 5 ) {  
+    while ( !DIRECT_READ(rReg, rBit) && cnt < 5 ) {
       /* while receive pin is LOW AND total is positive value */
       cnt++;
     }
@@ -216,6 +226,5 @@ enum pressSpot sensorToNeoPixel(int sensor_id) {
   if(sensor_id == 5 || sensor_id == 6) {
     return BOTTOM_LEFT;
   }
-  return 6;
+  return TOP_LEFT;
 }
-
